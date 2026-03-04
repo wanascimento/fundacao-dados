@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundação de Dados para IA e Analytics — NowVertical</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Barlow:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-deep:    #0A0FC7;
+    --blue-primary: #1A1AE8;
+    --blue-mid:     #2E2EFF;
+    --blue-light:   #4D4DFF;
+    --cyan:         #00CFFF;
+    --cyan-bright:  #17E8FF;
+    --lavender:     #F0F0FA;
+    --text-dark:    #1A1A2E;
+    --text-muted:   #6B7280;
+    --border:       #E5E7F0;
+    --white:        #FFFFFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #06070F;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--white);
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #canvas {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── SLIDES WRAPPER ── */
+  .slides-wrapper {
+    position: relative; z-index: 1;
+    width: 100%; height: 100%;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    display: none;
+    flex-direction: column;
+  }
+
+  .slide.active {
+    display: flex;
+    animation: slideIn 0.5s ease forwards;
+  }
+
+  .slide.exit {
+    animation: slideOut 0.5s ease forwards;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-30px); }
+  }
+
+  /* ── COMMON HEADER ── */
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 64px 0;
+    flex-shrink: 0;
+  }
+
+  .header-tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid #2a2a4a;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  /* ── COMMON FOOTER ── */
+  .slide-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 64px 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+
+  .footer-left {
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.5px;
+  }
+
+  .slide-counter {
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 1px;
+  }
+
+  /* ── GLOW LINE ── */
+  .glow-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.3;
+    flex-shrink: 0;
+  }
+
+  /* ── EYEBROW ── */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 24px; height: 2px;
+    background: var(--cyan);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── NAVIGATION ── */
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* ══════════════════════════════════════
+     SLIDE 1 — CAPA
+  ══════════════════════════════════════ */
+  #slide-1 {
+    display: none;
+  }
+  #slide-1.active {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  #slide-1 .slide-header { grid-column: 1 / -1; }
+  #slide-1 .slide-footer { grid-column: 1 / -1; }
+
+  .capa-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 24px 48px 24px 64px;
+  }
+
+  .capa-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: clamp(38px, 4.5vw, 62px);
+    font-weight: 900;
+    line-height: 1.05;
+    color: white;
+    margin-bottom: 24px;
+    letter-spacing: -1px;
+  }
+  .capa-title .accent { color: var(--cyan); display: block; }
+
+  .capa-meta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .meta-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+  .meta-pill .mdot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--cyan);
+  }
+
+  .capa-subtitle {
+    font-size: 15px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+    max-width: 400px;
+    margin-bottom: 40px;
+  }
+
+  .presenter {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .presenter-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-primary), var(--cyan));
+    flex-shrink: 0;
+  }
+
+  .presenter-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 3px;
+  }
+  .presenter-role {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .capa-right {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 64px 24px 24px;
+    position: relative;
+  }
+
+  .orb {
+    position: absolute;
+    width: 380px; height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%,
+      rgba(26,26,232,0.35) 0%,
+      rgba(0,207,255,0.1) 50%,
+      transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+  }
+
+  .pipeline-visual {
+    position: relative; z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+  }
+  .pipeline-step:hover {
+    background: rgba(0,207,255,0.06);
+    border-color: rgba(0,207,255,0.2);
+    transform: translateX(-3px);
+  }
+
+  .step-icon {
+    width: 32px; height: 32px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .icon-source  { background: rgba(107,107,255,0.2); }
+  .icon-cdc     { background: rgba(26,26,232,0.4); }
+  .icon-snow    { background: rgba(0,207,255,0.15); border: 1px solid rgba(0,207,255,0.25); }
+  .icon-product { background: rgba(77,77,255,0.3); }
+  .icon-ai      { background: rgba(0,255,150,0.12); }
+
+  .step-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    color: white; margin-bottom: 1px;
+  }
+  .step-desc { font-size: 9px; color: rgba(255,255,255,0.4); }
+
+  .step-badge {
+    margin-left: auto;
+    font-size: 8px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 3px;
+    white-space: nowrap;
+  }
+  .badge-grey  { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.35); }
+  .badge-cyan  { background: rgba(0,207,255,0.12); color: var(--cyan); border: 1px solid rgba(0,207,255,0.25); }
+  .badge-green { background: rgba(0,255,150,0.1); color: #00FF96; border: 1px solid rgba(0,255,150,0.2); }
+
+  .step-arrow {
+    display: flex; justify-content: center;
+    padding: 0 16px;
+  }
+  .arrow-dots { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .adot {
+    width: 3px; height: 3px; border-radius: 50%;
+    background: var(--cyan);
+    animation: pulseDot 1.6s ease-in-out infinite;
+  }
+  .adot:nth-child(1) { animation-delay: 0s; opacity: 0.8; }
+  .adot:nth-child(2) { animation-delay: 0.2s; opacity: 0.5; }
+  .adot:nth-child(3) { animation-delay: 0.4s; opacity: 0.25; }
+  .apoint {
+    width: 0; height: 0;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 5px solid rgba(0,207,255,0.4);
+  }
+  @keyframes pulseDot {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.8); box-shadow: 0 0 4px var(--cyan); }
+  }
+
+  /* ══════════════════════════════════════
+     SLIDE 2 — O PROBLEMA
+  ══════════════════════════════════════ */
+  .problem-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 32px 64px;
+    gap: 32px;
+  }
+
+  .problem-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: clamp(32px, 3.5vw, 52px);
+    font-weight: 900;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+  .problem-title .accent { color: var(--cyan); }
+
+  .market-intro {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  .mi-highlight {
+    color: white;
+    font-weight: 600;
+  }
+
+  .barrier-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .barrier-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-left: 3px solid var(--blue-light);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 16px;
+    transition: all 0.3s ease;
+  }
+  .barrier-card:hover {
+    background: rgba(77,77,255,0.08);
+    border-left-color: var(--cyan);
+    transform: translateY(-2px);
+  }
+  .barrier-icon {
+    font-family: 'Barlow', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: rgba(0,207,255,0.4);
+    flex-shrink: 0;
+    line-height: 1;
+    min-width: 20px;
+    margin-top: 2px;
+  }
+  .barrier-text {
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.5;
+  }
+
+  .pain-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pain-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-left: 3px solid var(--blue-light);
+    border-radius: 0 12px 12px 0;
+    padding: 18px 24px;
+    transition: all 0.3s ease;
+  }
+  .pain-card:hover {
+    background: rgba(77,77,255,0.08);
+    border-left-color: var(--cyan);
+    transform: translateX(4px);
+  }
+
+  .pain-number {
+    font-family: 'Barlow', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: rgba(77,77,255,0.3);
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .pain-content {}
+  .pain-main {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 3px;
+  }
+  .pain-main .pain-accent { color: rgba(255,255,255,0.45); font-weight: 400; }
+
+  .impact-box {
+    background: linear-gradient(135deg, rgba(26,26,232,0.2), rgba(0,207,255,0.08));
+    border: 1px solid rgba(0,207,255,0.2);
+    border-radius: 12px;
+    padding: 20px 28px;
+    text-align: center;
+  }
+
+  .impact-quote {
+    font-family: 'Barlow', sans-serif;
+    font-size: clamp(16px, 2vw, 24px);
+    font-weight: 800;
+    color: white;
+    line-height: 1.3;
+    letter-spacing: -0.3px;
+  }
+  .impact-quote .iq-accent { color: var(--cyan); }
+
+  /* ══════════════════════════════════════
+     SLIDE 3 — ARQUITETURA (reutiliza architecture.html como iframe embed)
+     Na verdade vamos recriar o diagrama inline
+  ══════════════════════════════════════ */
+  .arch-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 64px 24px;
+    gap: 20px;
+  }
+
+  .arch-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: clamp(24px, 2.8vw, 40px);
+    font-weight: 900;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+  .arch-title .accent { color: var(--cyan); }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .arch-card {
+    flex: 1;
+    border-radius: 14px;
+    padding: 16px 14px;
+    position: relative;
+    transition: transform 0.3s ease;
+    cursor: default;
+    max-width: 170px;
+  }
+  .arch-card:hover { transform: translateY(-5px); }
+
+  .ac-source  { background: linear-gradient(145deg,#1a1a3e,#12123a); border: 1px solid #2a2a5a; }
+  .ac-cdc     { background: linear-gradient(145deg,#0d1acc,#1a1ae8); border: 1px solid #3a3aff; }
+  .ac-snow    { background: linear-gradient(145deg,#0a0fc7,#1a1ae8); border: 1px solid var(--cyan); box-shadow: 0 0 24px rgba(0,207,255,0.12); }
+  .ac-product { background: linear-gradient(145deg,#1a1ae8,#4d4dff); border: 1px solid #6b6bff; }
+  .ac-consume { background: linear-gradient(145deg,#0d1222,#111827); border: 1px solid #2a3a5a; }
+
+  .ac-mile {
+    font-size: 8px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ac-icon { font-size: 18px; margin-bottom: 8px; }
+  .ac-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    color: white; margin-bottom: 4px; line-height: 1.3;
+  }
+  .ac-desc { font-size: 9px; color: rgba(255,255,255,0.6); line-height: 1.4; }
+  .ac-badge {
+    display: inline-block; margin-top: 8px;
+    font-size: 8px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 3px;
+    background: rgba(0,207,255,0.12); color: var(--cyan);
+    border: 1px solid rgba(0,207,255,0.25);
+  }
+  .ac-badge.green {
+    background: rgba(0,255,150,0.1); color: #00FF96;
+    border-color: rgba(0,255,150,0.2);
+  }
+
+  .arch-connector {
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 36px; padding-top: 28px;
+  }
+  .conn-line { display: flex; flex-direction: row; align-items: center; gap: 3px; }
+  .cdot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--cyan); opacity: 0.15;
+    animation: flowDot 1.4s ease-in-out infinite;
+  }
+  .cdot:nth-child(1) { animation-delay: 0s; }
+  .cdot:nth-child(2) { animation-delay: 0.25s; }
+  .cdot:nth-child(3) { animation-delay: 0.5s; }
+  .carr {
+    width: 0; height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--cyan);
+    opacity: 0.3;
+    animation: flashArrow 1.4s ease-in-out infinite;
+    animation-delay: 0.7s;
+  }
+  @keyframes flowDot {
+    0%,100% { opacity:0.15; transform:scale(0.8); }
+    50%      { opacity:1; transform:scale(1.3); box-shadow:0 0 5px var(--cyan); }
+  }
+  @keyframes flashArrow {
+    0%,100% { opacity:0.3; }
+    50%      { opacity:1; filter:drop-shadow(0 0 3px var(--cyan)); }
+  }
+
+  /* Layers row */
+  .layers-row {
+    display: flex; gap: 10px; justify-content: center;
+  }
+  .layer-pill {
+    flex: 1; max-width: 200px;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex; align-items: flex-start; gap: 10px;
+    transition: transform 0.3s ease;
+  }
+  .layer-pill:hover { transform: translateY(-3px); }
+  .lp-raw    { background:#12122e; border:1px solid #2a2a4a; }
+  .lp-bronze { background:#1a1208; border:1px solid #6b4a10; }
+  .lp-silver { background:#0e1a2e; border:1px solid #1a4a7a; }
+  .lp-gold   { background:#1a1400; border:1px solid #8b7200; }
+  .lp-kb     { background:#0a1a1a; border:1px solid #006b6b; }
+
+  .lp-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 3px;
+  }
+  .dot-raw    { background:#6b6bff; }
+  .dot-bronze { background:#cd8a3a; }
+  .dot-silver { background:#5aacff; }
+  .dot-gold   { background:#ffd700; }
+  .dot-kb     { background:#00cfff; }
+
+  .lp-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700; margin-bottom: 2px;
+  }
+  .lp-desc { font-size: 9px; color: rgba(255,255,255,0.6); line-height: 1.4; }
+
+  .qtc-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, rgba(26,26,232,0.15), rgba(0,207,255,0.06));
+    border: 1px solid rgba(0,207,255,0.2);
+    border-radius: 12px;
+    padding: 12px 20px;
+  }
+  .qtc-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    color: var(--cyan); letter-spacing: 1px;
+    text-transform: uppercase; white-space: nowrap;
+    padding-right: 20px;
+    border-right: 1px solid rgba(0,207,255,0.2);
+    flex-shrink: 0;
+  }
+  .qtc-caps { display: flex; gap: 24px; flex-wrap: wrap; }
+  .qtc-cap {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: rgba(255,255,255,0.75);
+    white-space: nowrap;
+  }
+  .qtc-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--cyan); flex-shrink: 0; opacity: 0.7;
+  }
+
+  /* ══════════════════════════════════════
+     SLIDE 4 — CDC
+  ══════════════════════════════════════ */
+  .cdc-body {
+    flex: 1; display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px 64px;
+    gap: 28px;
+  }
+
+  .slide-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: clamp(28px, 3vw, 44px);
+    font-weight: 900;
+    color: white; letter-spacing: -0.5px;
+  }
+  .slide-title .accent { color: var(--cyan); }
+
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .compare-col {
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .col-batch {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .col-cdc {
+    background: linear-gradient(145deg, rgba(26,26,232,0.15), rgba(0,207,255,0.06));
+    border: 1px solid rgba(0,207,255,0.2);
+  }
+
+  .col-header {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 4px;
+  }
+  .col-icon { font-size: 22px; }
+  .col-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: white;
+    letter-spacing: -0.3px;
+  }
+  .col-tag {
+    margin-left: auto;
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .tag-neutral { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); }
+  .tag-cyan    { background: rgba(0,207,255,0.12); color: var(--cyan); border: 1px solid rgba(0,207,255,0.25); }
+
+  .compare-row {
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .cr-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .cr-content {}
+  .cr-label {
+    font-size: 12px; font-weight: 500; color: white; margin-bottom: 1px;
+  }
+  .cr-desc { font-size: 10px; color: rgba(255,255,255,0.45); }
+
+  .cdc-message {
+    background: linear-gradient(135deg, rgba(26,26,232,0.2), rgba(0,207,255,0.08));
+    border: 1px solid rgba(0,207,255,0.2);
+    border-radius: 12px;
+    padding: 18px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(13px, 1.4vw, 16px);
+    font-weight: 700;
+    color: white;
+    line-height: 1.5;
+    text-align: center;
+  }
+  .cdc-message .accent { color: var(--cyan); }
+
+  /* ══════════════════════════════════════
+     SLIDE 5 — BRONZE → SILVER
+  ══════════════════════════════════════ */
+  .layers-body {
+    flex: 1; display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px 64px;
+    gap: 24px;
+  }
+
+  .layers-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .layer-col {
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .col-bronze {
+    background: rgba(26,18,8,0.8);
+    border: 1px solid #6b4a10;
+  }
+  .col-silver {
+    background: rgba(14,26,46,0.8);
+    border: 1px solid #1a4a7a;
+  }
+
+  .lc-header {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .lc-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .lc-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: 18px; font-weight: 900; color: white;
+    letter-spacing: -0.3px;
+  }
+  .lc-subtitle {
+    font-size: 10px; color: rgba(255,255,255,0.4);
+    margin-left: auto; letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  .lc-item {
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .lc-bullet {
+    width: 5px; height: 5px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 6px;
+  }
+  .lc-text {
+    font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.5;
+  }
+  .lc-text span { color: rgba(255,255,255,0.45); }
+
+  .layers-message {
+    background: linear-gradient(135deg, rgba(26,26,232,0.2), rgba(0,207,255,0.08));
+    border: 1px solid rgba(0,207,255,0.2);
+    border-radius: 12px;
+    padding: 18px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(13px, 1.4vw, 16px);
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .layers-message .accent { color: var(--cyan); }
+
+  /* ══════════════════════════════════════
+     SLIDE 6 — GOLD + IA READY
+  ══════════════════════════════════════ */
+  .gold-body {
+    flex: 1; display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px 64px;
+    gap: 24px;
+  }
+
+  .gold-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .gold-col {
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .col-gold {
+    background: rgba(26,20,0,0.9);
+    border: 1px solid #8b7200;
+  }
+  .col-ai {
+    background: rgba(10,26,26,0.9);
+    border: 1px solid #006b6b;
+  }
+
+  .gc-header {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .gc-icon { font-size: 22px; }
+  .gc-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 800; color: white;
+  }
+
+  .metric-cards {
+    display: flex; gap: 10px;
+  }
+  .metric-card {
+    flex: 1; border-radius: 10px;
+    padding: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    text-align: center;
+  }
+  .metric-value {
+    font-family: 'Barlow', sans-serif;
+    font-size: 22px; font-weight: 900;
+    color: #ffd700; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-label {
+    font-size: 9px; color: rgba(255,255,255,0.45);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  .gc-item {
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .gc-bullet {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #00cfff; flex-shrink: 0; margin-top: 6px;
+  }
+  .gc-text { font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+
+  .ai-example {
+    background: rgba(0,207,255,0.06);
+    border: 1px solid rgba(0,207,255,0.15);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .ai-label {
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 8px;
+  }
+  .ai-question {
+    font-size: 12px; color: white; line-height: 1.5;
+    font-style: italic;
+  }
+  .ai-response {
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    margin-top: 6px; line-height: 1.4;
+  }
+
+  /* ══════════════════════════════════════
+     SLIDE 7 — DATA PRODUCT + CONSUMO
+  ══════════════════════════════════════ */
+  .dp-body {
+    flex: 1; display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px 64px;
+    gap: 24px;
+  }
+
+  .dp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .dp-left {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .dp-definition {
+    background: linear-gradient(145deg, rgba(26,26,232,0.15), rgba(77,77,255,0.08));
+    border: 1px solid rgba(77,77,255,0.25);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .dp-def-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: 18px; font-weight: 900;
+    color: white; margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .dp-attr {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .dp-attr-icon { font-size: 16px; flex-shrink: 0; }
+  .dp-attr-text { font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.4; }
+  .dp-attr-text strong { color: white; }
+
+  .dp-right {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .consume-card {
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.03);
+  }
+  .consume-card:hover {
+    transform: translateX(-4px);
+    border-color: rgba(0,207,255,0.2);
+    background: rgba(0,207,255,0.05);
+  }
+
+  .cc-icon { font-size: 24px; flex-shrink: 0; }
+  .cc-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: white; margin-bottom: 2px;
+  }
+  .cc-desc { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.4; }
+  .cc-tag {
+    margin-left: auto;
+    font-size: 8px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .tag-qlik  { background: rgba(77,77,255,0.15); color: #8888ff; border: 1px solid rgba(77,77,255,0.3); }
+  .tag-api   { background: rgba(0,207,255,0.12); color: var(--cyan); border: 1px solid rgba(0,207,255,0.25); }
+  .tag-ai2   { background: rgba(0,255,150,0.1); color: #00FF96; border: 1px solid rgba(0,255,150,0.2); }
+
+  /* ══════════════════════════════════════
+     SLIDE 8 — FECHAMENTO + CTA
+  ══════════════════════════════════════ */
+  #slide-8.active {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  #slide-8 .slide-header { grid-column: 1 / -1; }
+  #slide-8 .slide-footer { grid-column: 1 / -1; }
+
+  .closing-left {
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 32px 40px 32px 64px;
+    gap: 28px;
+  }
+
+  .closing-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: clamp(28px, 3vw, 42px);
+    font-weight: 900;
+    color: white; letter-spacing: -0.5px;
+    line-height: 1.15;
+  }
+  .closing-title .accent { color: var(--cyan); }
+
+  .journey-row {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .journey-step {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .js-number {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(77,77,255,0.2);
+    border: 1px solid rgba(77,77,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px; font-weight: 900;
+    color: var(--cyan); flex-shrink: 0;
+  }
+
+  .js-text {
+    font-size: 13px; color: rgba(255,255,255,0.75);
+  }
+  .js-text strong { color: white; }
+
+  .js-connector {
+    width: 28px; display: flex; justify-content: center;
+    flex-shrink: 0;
+  }
+  .js-line {
+    width: 1px; height: 12px;
+    background: rgba(77,77,255,0.3);
+  }
+
+  .closing-right {
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 32px 64px 32px 32px;
+    gap: 20px;
+  }
+
+  .quote-box {
+    background: linear-gradient(135deg, rgba(26,26,232,0.25), rgba(0,207,255,0.1));
+    border: 1px solid rgba(0,207,255,0.25);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .quote-mark {
+    font-family: 'Barlow', sans-serif;
+    font-size: 48px; font-weight: 900;
+    color: rgba(0,207,255,0.2);
+    line-height: 0.8;
+    margin-bottom: 8px;
+  }
+  .quote-text {
+    font-family: 'Barlow', sans-serif;
+    font-size: clamp(16px, 1.8vw, 22px);
+    font-weight: 800;
+    color: white; line-height: 1.3;
+    letter-spacing: -0.3px;
+  }
+  .quote-text .qt-accent { color: var(--cyan); }
+
+  .cta-cards {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .cta-card {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: all 0.3s ease;
+  }
+  .cta-card:hover {
+    background: rgba(77,77,255,0.1);
+    border-color: rgba(77,77,255,0.3);
+  }
+  .cta-card-main {
+    background: linear-gradient(135deg, rgba(26,26,232,0.25), rgba(0,207,255,0.1)) !important;
+    border: 1px solid rgba(0,207,255,0.35) !important;
+    box-shadow: 0 0 24px rgba(0,207,255,0.1);
+  }
+  .cta-card-main:hover {
+    background: linear-gradient(135deg, rgba(26,26,232,0.35), rgba(0,207,255,0.15)) !important;
+    border-color: rgba(0,207,255,0.5) !important;
+  }
+  .cta-title-main {
+    font-size: 15px !important;
+    color: var(--cyan) !important;
+  }
+  .cta-desc-main {
+    font-size: 13px !important;
+    color: rgba(255,255,255,0.75) !important;
+  }
+  .cta-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: white; margin-bottom: 2px;
+  }
+  .cta-desc { font-size: 11px; color: rgba(255,255,255,0.45); }
+
+  /* ══════════════════════════════════════
+     GLOBAL ANIMATIONS
+  ══════════════════════════════════════ */
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity:0; }
+    to   { opacity:1; }
+  }
+
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<!-- NAV HINT -->
+<div class="nav-hint">← → navegação</div>
+
+<div class="slides-wrapper">
+
+  <!-- ══════════════ SLIDE 1 — CAPA ══════════════ -->
+  <div class="slide" id="slide-1">
+    <div class="glow-line"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">Live Demo · End-to-end</div>
+    </div>
+    <div class="capa-left">
+      <div class="eyebrow">Data Foundation for AI & Analytics</div>
+      <h1 class="capa-title">
+        Fundação de Dados
+        <span class="accent">para IA e Analytics</span>
+      </h1>
+      <div class="capa-meta">
+        <div class="meta-pill"><div class="mdot"></div>End-to-end demo</div>
+      </div>
+      <p class="capa-subtitle">Da captura em tempo real ao dado pronto para IA e Analytics.</p>
+      <div class="presenter">
+        <div class="presenter-avatar"></div>
+        <div>
+          <div class="presenter-name">Washington Nascimento</div>
+          <div class="presenter-role">Tech Lead · Data Integration · NowVertical</div>
+        </div>
+      </div>
+    </div>
+    <div class="capa-right">
+      <div class="orb"></div>
+      <div class="pipeline-visual">
+        <div class="pipeline-step">
+          <div class="step-icon icon-source">🏪</div>
+          <div><div class="step-label">NV Ferragens CRM</div><div class="step-desc">MySQL · múltiplas tabelas</div></div>
+          <div class="step-badge badge-grey">Source</div>
+        </div>
+        <div class="step-arrow"><div class="arrow-dots"><div class="adot"></div><div class="adot"></div><div class="adot"></div><div class="apoint"></div></div></div>
+        <div class="pipeline-step">
+          <div class="step-icon icon-cdc">⚡</div>
+          <div><div class="step-label">Qlik Talend Cloud</div><div class="step-desc">CDC · Real-time Replicate</div></div>
+          <div class="step-badge badge-cyan">CDC</div>
+        </div>
+        <div class="step-arrow"><div class="arrow-dots"><div class="adot"></div><div class="adot"></div><div class="adot"></div><div class="apoint"></div></div></div>
+        <div class="pipeline-step">
+          <div class="step-icon icon-snow">❄️</div>
+          <div><div class="step-label">Snowflake</div><div class="step-desc">Raw → Bronze → Silver → Gold</div></div>
+          <div class="step-badge badge-cyan">Foundation</div>
+        </div>
+        <div class="step-arrow"><div class="arrow-dots"><div class="adot"></div><div class="adot"></div><div class="adot"></div><div class="apoint"></div></div></div>
+        <div class="pipeline-step">
+          <div class="step-icon icon-product">📦</div>
+          <div><div class="step-label">Data Product</div><div class="step-desc">Owner · SLA · Marketplace</div></div>
+          <div class="step-badge badge-cyan">Trusted</div>
+        </div>
+        <div class="step-arrow"><div class="arrow-dots"><div class="adot"></div><div class="adot"></div><div class="adot"></div><div class="apoint"></div></div></div>
+        <div class="pipeline-step">
+          <div class="step-icon icon-ai">🤖</div>
+          <div><div class="step-label">IA + Analytics</div><div class="step-desc">Qlik · API · Agentes IA</div></div>
+          <div class="step-badge badge-green">AI Ready</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">01 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SLIDE 2 — O PROBLEMA ══════════════ -->
+  <div class="slide" id="slide-2">
+    <div class="glow-line"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">O Problema</div>
+    </div>
+    <div class="problem-body">
+      <div class="eyebrow">Por que estamos aqui</div>
+      <h2 class="problem-title">O <span class="accent">problema</span> real</h2>
+      <div class="market-intro">
+        <span class="mi-highlight">Pouquíssimas empresas estão gerando valor real com IA.</span> O valor ainda é privilégio de poucos — e a causa quase sempre é a mesma.
+      </div>
+      <div class="barrier-grid">
+        <div class="barrier-card">
+          <div class="barrier-icon">01</div>
+          <div class="barrier-text">Qualidade, disponibilidade e acesso aos dados</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon">02</div>
+          <div class="barrier-text">Integração com sistemas existentes</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon">03</div>
+          <div class="barrier-text">Lacunas de governança, segurança e compliance — ninguém sabe quem é o dono do dado</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon">04</div>
+          <div class="barrier-text">Dados espalhados em silos — ninguém confia na mesma fonte</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon">05</div>
+          <div class="barrier-text">Relatório diverge entre áreas — quem tem razão?</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon">06</div>
+          <div class="barrier-text">Qualidade invisível — dado errado só aparece quando o board pergunta</div>
+        </div>
+      </div>
+      <div class="impact-box">
+        <div class="impact-quote">Você não tem problema de <span class="iq-accent">IA.</span><br>Você tem problema de <span class="iq-accent">fundação.</span></div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">02 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SLIDE 3 — ARQUITETURA ══════════════ -->
+  <div class="slide" id="slide-3">
+    <div class="glow-line"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">Arquitetura</div>
+    </div>
+    <div class="arch-body">
+      <div class="eyebrow">Visão end-to-end</div>
+      <h2 class="arch-title">Da origem ao <span class="accent">dado confiável</span></h2>
+      <div class="flow-row">
+        <div class="arch-card ac-source">
+          <div class="ac-mile">1st Mile</div>
+          <div class="ac-icon">🏪</div>
+          <div class="ac-name">NV Ferragens CRM</div>
+          <div class="ac-desc">MySQL · múltiplas tabelas · 12 lojas + e-commerce</div>
+          <div class="ac-badge">Source</div>
+        </div>
+        <div class="arch-connector"><div class="conn-line"><div class="cdot"></div><div class="cdot"></div><div class="cdot"></div><div class="carr"></div></div></div>
+        <div class="arch-card ac-cdc">
+          <div class="ac-mile">2nd Mile</div>
+          <div class="ac-icon">⚡</div>
+          <div class="ac-name">Qlik Talend Cloud</div>
+          <div class="ac-desc">CDC · Replicate sem batch, sem impacto na origem</div>
+          <div class="ac-badge">Real-time</div>
+        </div>
+        <div class="arch-connector"><div class="conn-line"><div class="cdot"></div><div class="cdot"></div><div class="cdot"></div><div class="carr"></div></div></div>
+        <div class="arch-card ac-snow">
+          <div class="ac-mile">3rd Mile</div>
+          <div class="ac-icon">❄️</div>
+          <div class="ac-name">Snowflake</div>
+          <div class="ac-desc">Raw → Bronze → Silver → Gold · KB vetorizada</div>
+          <div class="ac-badge">Foundation</div>
+        </div>
+        <div class="arch-connector"><div class="conn-line"><div class="cdot"></div><div class="cdot"></div><div class="cdot"></div><div class="carr"></div></div></div>
+        <div class="arch-card ac-product">
+          <div class="ac-mile">4th Mile</div>
+          <div class="ac-icon">📦</div>
+          <div class="ac-name">Data Product</div>
+          <div class="ac-desc">QTC · Owner, SLA · Data Marketplace</div>
+          <div class="ac-badge green">Trusted</div>
+        </div>
+        <div class="arch-connector"><div class="conn-line"><div class="cdot"></div><div class="cdot"></div><div class="cdot"></div><div class="carr"></div></div></div>
+        <div class="arch-card ac-consume">
+          <div class="ac-mile">5th Mile</div>
+          <div class="ac-icon">🎯</div>
+          <div class="ac-name">Consumo</div>
+          <div class="ac-desc">Qlik · API REST · AI Assistants</div>
+          <div class="ac-badge">Last Mile</div>
+        </div>
+      </div>
+      <div class="layers-row">
+        <div class="layer-pill lp-raw"><div class="lp-dot dot-raw"></div><div><div class="lp-name">Raw Zone</div><div class="lp-desc">Fiel à origem · Auditável</div></div></div>
+        <div class="layer-pill lp-bronze"><div class="lp-dot dot-bronze"></div><div><div class="lp-name">Bronze</div><div class="lp-desc">Estrutura · Tipagem</div></div></div>
+        <div class="layer-pill lp-silver"><div class="lp-dot dot-silver"></div><div><div class="lp-name">Silver</div><div class="lp-desc">Joins · Qualidade · Confiança</div></div></div>
+        <div class="layer-pill lp-gold"><div class="lp-dot dot-gold"></div><div><div class="lp-name">Gold</div><div class="lp-desc">Data Mart · Agregações</div></div></div>
+        <div class="layer-pill lp-kb"><div class="lp-dot dot-kb"></div><div><div class="lp-name">Knowledge Base</div><div class="lp-desc">Embeddings · RAG-ready</div></div></div>
+      </div>
+      <div class="qtc-row">
+        <div class="qtc-label">Qlik Talend Cloud</div>
+        <div class="qtc-caps">
+          <div class="qtc-cap"><span class="qtc-dot"></span>Replicação com CDC</div>
+          <div class="qtc-cap"><span class="qtc-dot"></span>Transformação com IA / No-Code</div>
+          <div class="qtc-cap"><span class="qtc-dot"></span>Criação de Data Marts</div>
+          <div class="qtc-cap"><span class="qtc-dot"></span>Bases de Conhecimento para IA</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">03 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SLIDE 4 — CDC ══════════════ -->
+  <div class="slide" id="slide-4">
+    <div class="glow-line"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">Captura de Dados</div>
+    </div>
+    <div class="cdc-body">
+      <div class="eyebrow">2nd Mile · Integração</div>
+      <h2 class="slide-title">Batch e CDC — <span class="accent">cada um no seu contexto</span></h2>
+      <div class="compare-grid">
+        <div class="compare-col col-batch">
+          <div class="col-header">
+            <div class="col-icon">🗓️</div>
+            <div class="col-title">Batch</div>
+            <div class="col-tag tag-neutral">Tradicional</div>
+          </div>
+          <div class="compare-row"><div class="cr-icon">📋</div><div class="cr-content"><div class="cr-label">Janela agendada</div><div class="cr-desc">Execução em horários pré-definidos</div></div></div>
+          <div class="compare-row"><div class="cr-icon">📦</div><div class="cr-content"><div class="cr-label">Carga completa ou incremental</div><div class="cr-desc">Todo o volume ou delta desde última carga</div></div></div>
+          <div class="compare-row"><div class="cr-icon">⏱️</div><div class="cr-content"><div class="cr-label">Latência conforme agendamento</div><div class="cr-desc">Previsível e configurável</div></div></div>
+          <div class="compare-row"><div class="cr-icon">✅</div><div class="cr-content"><div class="cr-label">Ideal para volumes históricos</div><div class="cr-desc">Consolidações, relatórios periódicos</div></div></div>
+        </div>
+        <div class="compare-col col-cdc">
+          <div class="col-header">
+            <div class="col-icon">⚡</div>
+            <div class="col-title">CDC</div>
+            <div class="col-tag tag-cyan">Near/Real-time</div>
+          </div>
+          <div class="compare-row"><div class="cr-icon">🔄</div><div class="cr-content"><div class="cr-label">Evento a evento</div><div class="cr-desc">Cada INSERT, UPDATE, DELETE capturado</div></div></div>
+          <div class="compare-row"><div class="cr-icon">🎯</div><div class="cr-content"><div class="cr-label">Só o que mudou</div><div class="cr-desc">Zero redundância, zero impacto na origem</div></div></div>
+          <div class="compare-row"><div class="cr-icon">⚡</div><div class="cr-content"><div class="cr-label">Latência mínima — near real-time</div><div class="cr-desc">Segundos entre origem e destino</div></div></div>
+          <div class="compare-row"><div class="cr-icon">✅</div><div class="cr-content"><div class="cr-label">Ideal para decisão em tempo real</div><div class="cr-desc">Dashboards live, alertas, IA operacional</div></div></div>
+        </div>
+      </div>
+      <div class="cdc-message">
+        Batch e CDC <span class="accent">não competem</span> — se complementam.<br>
+        A escolha é sobre o que o negócio precisa: processamento histórico ou <span class="accent">visibilidade agora.</span>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">04 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SLIDE 5 — BRONZE → SILVER ══════════════ -->
+  <div class="slide" id="slide-5">
+    <div class="glow-line"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">Transformação</div>
+    </div>
+    <div class="layers-body">
+      <div class="eyebrow">3rd Mile · Snowflake</div>
+      <h2 class="slide-title">Bronze → Silver — <span class="accent">da estrutura à confiança</span></h2>
+      <div class="layers-compare">
+        <div class="layer-col col-bronze">
+          <div class="lc-header">
+            <div class="lc-dot" style="background:#cd8a3a;"></div>
+            <div class="lc-title">Bronze</div>
+            <div class="lc-subtitle">Estrutura</div>
+          </div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#cd8a3a;"></div><div class="lc-text">Tipagem e padronização de campos</div></div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#cd8a3a;"></div><div class="lc-text">Deduplicação de registros</div></div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#cd8a3a;"></div><div class="lc-text">Fiel à origem <span>— sem regra de negócio</span></div></div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#cd8a3a;"></div><div class="lc-text">Rastreável até o evento de CDC</div></div>
+        </div>
+        <div class="layer-col col-silver">
+          <div class="lc-header">
+            <div class="lc-dot" style="background:#5aacff;"></div>
+            <div class="lc-title">Silver</div>
+            <div class="lc-subtitle">Confiança</div>
+          </div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#5aacff;"></div><div class="lc-text">Joins com dimensões <span>— produto, loja, vendedor</span></div></div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#5aacff;"></div><div class="lc-text">Agrupamentos e campos calculados</div></div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#5aacff;"></div><div class="lc-text">Margem, ticket médio, variação de período</div></div>
+          <div class="lc-item"><div class="lc-bullet" style="background:#5aacff;"></div><div class="lc-text">Regras de qualidade <span>— dado rejeitado com visibilidade</span></div></div>
+        </div>
+      </div>
+      <div class="layers-message">
+        Bronze é <span class="accent">estrutura.</span> Silver é <span class="accent">contexto.</span><br>
+        O dado não muda — o que muda é o que você consegue <span class="accent">perguntar para ele.</span>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">05 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SLIDE 6 — GOLD + IA READY ══════════════ -->
+  <div class="slide" id="slide-6">
+    <div class="glow-line"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">Gold + IA Ready</div>
+    </div>
+    <div class="gold-body">
+      <div class="eyebrow">3rd Mile · Snowflake</div>
+      <h2 class="slide-title">Gold + IA Ready — <span class="accent">dado que gera valor</span></h2>
+      <div class="gold-grid">
+        <div class="gold-col col-gold">
+          <div class="gc-header">
+            <div class="gc-icon">🥇</div>
+            <div class="gc-title">Gold Layer</div>
+          </div>
+          <div class="metric-cards">
+            <div class="metric-card"><div class="metric-value">#1</div><div class="metric-label">Top SKU</div></div>
+            <div class="metric-card"><div class="metric-value">↑12%</div><div class="metric-label">Margem</div></div>
+            <div class="metric-card"><div class="metric-value">R$284</div><div class="metric-label">Ticket Médio</div></div>
+          </div>
+          <div class="gc-item"><div class="gc-bullet" style="background:#ffd700;"></div><div class="gc-text">Granularidade loja / dia / SKU</div></div>
+          <div class="gc-item"><div class="gc-bullet" style="background:#ffd700;"></div><div class="gc-text">Agregações pré-calculadas para performance</div></div>
+          <div class="gc-item"><div class="gc-bullet" style="background:#ffd700;"></div><div class="gc-text">Particionado e clusterizado no Snowflake</div></div>
+        </div>
+        <div class="gold-col col-ai">
+          <div class="gc-header">
+            <div class="gc-icon">🤖</div>
+            <div class="gc-title">IA Ready</div>
+          </div>
+          <div class="gc-item"><div class="gc-bullet"></div><div class="gc-text">Descrições de produto + contexto de venda → texto estruturado</div></div>
+          <div class="gc-item"><div class="gc-bullet"></div><div class="gc-text">Embeddings gerados via Snowflake Cortex</div></div>
+          <div class="gc-item"><div class="gc-bullet"></div><div class="gc-text">Knowledge Base vetorizada — RAG-ready</div></div>
+          <div class="ai-example">
+            <div class="ai-label">💬 Pergunta em linguagem natural</div>
+            <div class="ai-question">"Quais produtos mais venderam no mês passado?"</div>
+            <div class="ai-response">→ Sem SQL. Sem analista intermediário. Resposta com contexto real.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">06 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SLIDE 7 — DATA PRODUCT + CONSUMO ══════════════ -->
+  <div class="slide" id="slide-7">
+    <div class="glow-line"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">Data Product</div>
+    </div>
+    <div class="dp-body">
+      <div class="eyebrow">4th + 5th Mile</div>
+      <h2 class="slide-title">Data Product — <span class="accent">dado com dono e contrato</span></h2>
+      <div class="dp-grid">
+        <div class="dp-left">
+          <div class="dp-definition">
+            <div class="dp-def-title">O que é um Data Product?</div>
+            <div class="dp-attr"><div class="dp-attr-icon">👤</div><div class="dp-attr-text"><strong>Owner</strong> — alguém responsável pela qualidade e pelo SLA</div></div>
+            <div class="dp-attr"><div class="dp-attr-icon">📋</div><div class="dp-attr-text"><strong>Metadados</strong> — o consumidor sabe o que está consumindo, de onde veio e quando foi atualizado</div></div>
+            <div class="dp-attr"><div class="dp-attr-icon">🤝</div><div class="dp-attr-text"><strong>Contrato de acesso</strong> — quem pode consumir e como</div></div>
+            <div class="dp-attr"><div class="dp-attr-icon">🏪</div><div class="dp-attr-text"><strong>Data Marketplace</strong> — publicado, descobrível, confiável</div></div>
+          </div>
+        </div>
+        <div class="dp-right">
+          <div class="consume-card">
+            <div class="cc-icon">📊</div>
+            <div><div class="cc-title">Qlik Applications</div><div class="cc-desc">Painéis conectados ao Data Product · near real-time</div></div>
+            <div class="cc-tag tag-qlik">Qlik Sense</div>
+          </div>
+          <div class="consume-card">
+            <div class="cc-icon">🔌</div>
+            <div><div class="cc-title">API REST</div><div class="cc-desc">Endpoint gerado automaticamente · integração com qualquer sistema</div></div>
+            <div class="cc-tag tag-api">REST / JSON</div>
+          </div>
+          <div class="consume-card">
+            <div class="cc-icon">🤖</div>
+            <div><div class="cc-title">AI Assistants</div><div class="cc-desc">Acesso direto à <strong style="color:var(--cyan)">Knowledge Base</strong> no Snowflake · RAG</div></div>
+            <div class="cc-tag tag-ai2">Agentes IA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">07 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SLIDE 8 — FECHAMENTO ══════════════ -->
+  <div class="slide" id="slide-8">
+    <div class="glow-line" style="grid-column:1/-1;"></div>
+    <div class="slide-header">
+      <img src="logo-nv-white.png" alt="NowVertical" style="height:28px;width:auto;">
+      <div class="header-tag">Fechamento</div>
+    </div>
+    <div class="closing-left">
+      <div class="eyebrow">A jornada completa</div>
+      <h2 class="closing-title">Do problema<br>à <span class="accent">fundação</span><br>ao valor</h2>
+      <div class="journey-row">
+        <div class="journey-step"><div class="js-number">1</div><div class="js-text"><strong>Captura</strong> — CDC em tempo real sem impacto na origem</div></div>
+        <div class="journey-step"><div class="js-connector"><div class="js-line"></div></div></div>
+        <div class="journey-step"><div class="js-number">2</div><div class="js-text"><strong>Estrutura</strong> — Bronze: dado tipado, limpo, rastreável</div></div>
+        <div class="journey-step"><div class="js-connector"><div class="js-line"></div></div></div>
+        <div class="journey-step"><div class="js-number">3</div><div class="js-text"><strong>Confiança</strong> — Silver: joins, qualidade, campos calculados</div></div>
+        <div class="journey-step"><div class="js-connector"><div class="js-line"></div></div></div>
+        <div class="journey-step"><div class="js-number">4</div><div class="js-text"><strong>Valor</strong> — Gold + IA: decisão e linguagem natural</div></div>
+        <div class="journey-step"><div class="js-connector"><div class="js-line"></div></div></div>
+        <div class="journey-step"><div class="js-number">5</div><div class="js-text"><strong>Produto</strong> — Data Product: dado com dono, SLA e contrato</div></div>
+      </div>
+    </div>
+    <div class="closing-right">
+      <div class="quote-box">
+        <div class="quote-mark">"</div>
+        <div class="quote-text">
+          Você não tem problema de <span class="qt-accent">IA.</span><br>
+          Você tem problema de <span class="qt-accent">fundação.</span><br>
+          <span style="font-size:0.75em;color:rgba(255,255,255,0.5);font-weight:400;">Resolva a fundação — a IA vem junto.</span>
+        </div>
+      </div>
+      <div class="cta-cards">
+        <div class="cta-card cta-card-main">
+          <div class="cta-icon">🔍</div>
+          <div><div class="cta-title cta-title-main">Sessão de diagnóstico</div><div class="cta-desc cta-desc-main">Nos chama — vamos mapear sua fundação <span style="color:var(--cyan);font-weight:700;">sem compromisso.</span></div></div>
+        </div>
+        <div class="cta-card">
+          <div class="cta-icon">💼</div>
+          <div><div class="cta-title">LinkedIn</div><div class="cta-desc"><a href="https://www.linkedin.com/in/wmnascimento/" style="color:var(--cyan);text-decoration:none;">linkedin.com/in/wmnascimento</a></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <div class="footer-left">Fundação de Dados para IA e Analytics</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="slide-counter">08 / 08</div>
+        <img src="logo-nv-white.png" alt="NowVertical" style="height:18px;width:auto;opacity:0.3;">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PARTICLE CANVAS -->
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+function createParticles() {
+  particles = [];
+  const count = Math.floor((W * H) / 16000);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.4 + 0.2,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      alpha: Math.random() * 0.35 + 0.05,
+      color: Math.random() > 0.75 ? '#00CFFF' : '#4D4DFF'
+    });
+  }
+}
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i+1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const d = Math.sqrt(dx*dx+dy*dy);
+      if (d < 100) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(77,77,255,${0.05*(1-d/100)})`;
+        ctx.lineWidth = 0.5;
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+  for (const p of particles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    p.x += p.vx; p.y += p.vy;
+    if (p.x<0) p.x=W; if (p.x>W) p.x=0;
+    if (p.y<0) p.y=H; if (p.y>H) p.y=0;
+  }
+  requestAnimationFrame(draw);
+}
+resize(); createParticles(); draw();
+window.addEventListener('resize', ()=>{ resize(); createParticles(); });
+
+// ── CURSOR GLOW ──
+const cursorGlow = document.createElement('div');
+cursorGlow.style.cssText = `
+  position: fixed;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(circle, rgba(0,207,255,0.12) 0%, rgba(0,207,255,0.04) 40%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+  opacity: 0;
+`;
+document.body.appendChild(cursorGlow);
+
+document.addEventListener('mousemove', e => {
+  cursorGlow.style.left = e.clientX + 'px';
+  cursorGlow.style.top  = e.clientY + 'px';
+  cursorGlow.style.opacity = '1';
+});
+document.addEventListener('mouseleave', () => {
+  cursorGlow.style.opacity = '0';
+});
+
+// ── NAVIGATION ──
+let current = 1;
+const total = 8;
+
+function goTo(n) {
+  if (n < 1 || n > total) return;
+  const prev = document.getElementById('slide-' + current);
+  const next = document.getElementById('slide-' + n);
+  prev.classList.remove('active');
+  next.classList.add('active');
+  current = n;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+});
+
+// Start on slide 1
+goTo(1);
+</script>
+
+</body>
+</html>
